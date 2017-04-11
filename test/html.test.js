@@ -219,15 +219,17 @@ function() {
 
   initializeNativeSourceBuffers(sourceBuffer);
 
-  sourceBuffer.inbandTextTrack_ = {
-    removeCue(cue) {
-      removedCue.push(cue);
-      this.cues.splice(this.cues.indexOf(cue), 1);
-    },
-    cues: [
-      {startTime: 10, endTime: 20, text: 'delete me'},
-      {startTime: 0, endTime: 2, text: 'save me'}
-    ]
+  sourceBuffer.inbandTextTracks_ = {
+    CC1: {
+      removeCue(cue) {
+        removedCue.push(cue);
+        this.cues.splice(this.cues.indexOf(cue), 1);
+      },
+      cues: [
+        {startTime: 10, endTime: 20, text: 'delete me'},
+        {startTime: 0, endTime: 2, text: 'save me'}
+      ]
+    }
   };
   mediaSource.videoBuffer_.remove = function(start, end) {
     if (start === 3 && end === 10) {
@@ -244,7 +246,7 @@ function() {
 
   QUnit.equal(removes, 2, 'called remove on both sourceBuffers');
   QUnit.equal(
-    sourceBuffer.inbandTextTrack_.cues.length,
+    sourceBuffer.inbandTextTracks_.CC1.cues.length,
     1,
     'one cue remains after remove'
   );
@@ -263,8 +265,10 @@ function() {
 
   initializeNativeSourceBuffers(sourceBuffer);
 
-  sourceBuffer.inbandTextTrack_ = {
-    cues: null
+  sourceBuffer.inbandTextTracks_ = {
+    CC1: {
+      cues: null
+    }
   };
 
   mediaSource.videoBuffer_.remove = function(start, end) {
@@ -278,7 +282,7 @@ function() {
   sourceBuffer.remove(3, 10);
 
   QUnit.equal(
-    sourceBuffer.inbandTextTrack_.cues,
+    sourceBuffer.inbandTextTracks_.CC1.cues,
     null,
     'cues are still null'
   );
@@ -294,15 +298,17 @@ QUnit.test('removing works even with audio disabled', function() {
 
   initializeNativeSourceBuffers(muxedBuffer);
 
-  muxedBuffer.inbandTextTrack_ = {
-    removeCue(cue) {
-      removedCue.push(cue);
-      this.cues.splice(this.cues.indexOf(cue), 1);
-    },
-    cues: [
-      {startTime: 10, endTime: 20, text: 'delete me'},
-      {startTime: 0, endTime: 2, text: 'save me'}
-    ]
+  muxedBuffer.inbandTextTracks_ = {
+    CC1: {
+      removeCue(cue) {
+        removedCue.push(cue);
+        this.cues.splice(this.cues.indexOf(cue), 1);
+      },
+      cues: [
+        {startTime: 10, endTime: 20, text: 'delete me'},
+        {startTime: 0, endTime: 2, text: 'save me'}
+      ]
+    }
   };
   mediaSource.videoBuffer_.remove = function(start, end) {
     if (start === 3 && end === 10) {
@@ -318,7 +324,7 @@ QUnit.test('removing works even with audio disabled', function() {
   muxedBuffer.remove(3, 10);
 
   QUnit.equal(removes, 2, 'called remove on both muxedBuffers');
-  QUnit.equal(muxedBuffer.inbandTextTrack_.cues.length,
+  QUnit.equal(muxedBuffer.inbandTextTracks_.CC1.cues.length,
               1,
               'one cue remains after remove');
   QUnit.equal(removedCue[0].text,
@@ -1057,16 +1063,16 @@ QUnit.test('translates caption events into WebVTT cues', function() {
     captions: [{
       startTime: 1,
       endTime: 3,
-      text: 'This is an in-band caption'
+      text: 'This is an in-band caption in CC1'
     }]
   }));
   sourceBuffer.transmuxer_.onmessage(doneMessage);
-  let cues = sourceBuffer.inbandTextTrack_.cues;
+  let cues = sourceBuffer.inbandTextTracks_.CC1.cues;
 
   QUnit.equal(types.length, 1, 'created one text track');
   QUnit.equal(types[0], 'captions', 'the type was captions');
   QUnit.equal(cues.length, 1, 'created one cue');
-  QUnit.equal(cues[0].text, 'This is an in-band caption', 'included the text');
+  QUnit.equal(cues[0].text, 'This is an in-band caption in CC1', 'included the text');
   QUnit.equal(cues[0].startTime, 11, 'started at eleven');
   QUnit.equal(cues[0].endTime, 13, 'ended at thirteen');
 });
@@ -1154,7 +1160,7 @@ QUnit.test('removes existing metadata and caption tracks that exist on the playe
     label: 'Timed Metadata'
   }, {
     kind: 'captions',
-    label: 'cc1'
+    label: 'CC1'
   }];
   let removedTracks = [];
   let metadata = [{

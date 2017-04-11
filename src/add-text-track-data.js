@@ -64,7 +64,10 @@ const addTextTrackData = function(sourceHandler, captionArray, metadataArray) {
 
   if (captionArray) {
     captionArray.forEach(function(caption) {
-      this.inbandTextTrack_.addCue(
+      // Support older mux.js which only supports CC1
+      let track = caption.stream || 'CC1';
+
+      this.inbandTextTracks_[track].addCue(
         new Cue(
           caption.startTime + this.timestampOffset,
           caption.endTime + this.timestampOffset,

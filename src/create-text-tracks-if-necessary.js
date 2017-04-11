@@ -16,13 +16,22 @@ const createTextTracksIfNecessary = function(sourceBuffer, mediaSource, segment)
 
   // create an in-band caption track if one is present in the segment
   if (segment.captions &&
-      segment.captions.length &&
-      !sourceBuffer.inbandTextTrack_) {
-    removeExistingTrack(player, 'captions', 'cc1');
-    sourceBuffer.inbandTextTrack_ = player.addRemoteTextTrack({
-      kind: 'captions',
-      label: 'cc1'
-    }, false).track;
+      segment.captions.length) {
+    if (!sourceBuffer.inbandTextTracks_) {
+      sourceBuffer.inbandTextTracks_ = {};
+    }
+    segment.captions.forEach(function(caption) {
+      // Support older mux.js which only supports CC1
+      let track = caption.stream || 'CC1';
+
+      if (!sourceBuffer.inbandTextTracks_[track]) {
+        removeExistingTrack(player, 'captions', track);
+        sourceBuffer.inbandTextTracks_[track] = player.addRemoteTextTrack({
+          kind: 'captions',
+          label: track
+        }, false).track;
+      }
+    });
   }
 
   if (segment.metadata &&

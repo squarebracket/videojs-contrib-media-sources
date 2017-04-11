@@ -26,6 +26,9 @@ export const removeExistingTrack = function(player, kind, label) {
  * @private
  */
 export const cleanupTextTracks = function(player) {
-  removeExistingTrack(player, 'captions', 'cc1');
+  removeExistingTrack(player, 'captions', 'CC1');
+  removeExistingTrack(player, 'captions', 'CC2');
+  removeExistingTrack(player, 'captions', 'CC3');
+  removeExistingTrack(player, 'captions', 'CC4');
   removeExistingTrack(player, 'metadata', 'Timed Metadata');
 };
