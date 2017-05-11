@@ -1062,6 +1062,11 @@ QUnit.test('cleans up WebVTT cues on hls dispose', function() {
       addedTracks.push(trackEl.track);
       return trackEl;
     },
+    textTracks() {
+      return {
+        getTrackById() {}
+      };
+    },
     remoteTextTracks() {
       return addedTracks;
     },

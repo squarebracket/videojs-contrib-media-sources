@@ -1055,6 +1055,11 @@ QUnit.test('translates caption events into WebVTT cues', function() {
         }
       };
     },
+    textTracks() {
+      return {
+        getTrackById() {}
+      };
+    },
     remoteTextTracks() {
     }
   };
@@ -1075,6 +1080,71 @@ QUnit.test('translates caption events into WebVTT cues', function() {
   QUnit.equal(cues[0].text, 'This is an in-band caption in CC1', 'included the text');
   QUnit.equal(cues[0].startTime, 11, 'started at eleven');
   QUnit.equal(cues[0].endTime, 13, 'ended at thirteen');
+});
+
+QUnit.test('captions use existing tracks with id equal to CC#', function() {
+  let mediaSource = new videojs.MediaSource();
+  let sourceBuffer = mediaSource.addSourceBuffer('video/mp2t');
+  let addTrackCalled = 0;
+  let tracks = {
+    CC1: {
+      kind: 'captions',
+      label: 'CC1',
+      id: 'CC1',
+      cues: [],
+      addCue(cue) {
+        this.cues.push(cue);
+      }
+    },
+    CC2: {
+      kind: 'captions',
+      label: 'CC2',
+      id: 'CC2',
+      cues: [],
+      addCue(cue) {
+        this.cues.push(cue);
+      }
+    }
+  };
+
+  mediaSource.player_ = {
+    addRemoteTextTrack(options) {
+      addTrackCalled++;
+    },
+    textTracks() {
+      return {
+        getTrackById(id) {
+          return tracks[id];
+        }
+      };
+    },
+    remoteTextTracks() {
+    }
+  };
+  sourceBuffer.timestampOffset = 10;
+  sourceBuffer.transmuxer_.onmessage(createDataMessage('video', new Uint8Array(1), {
+    captions: [{
+      stream: 'CC1',
+      startTime: 1,
+      endTime: 3,
+      text: 'This is an in-band caption in CC1'
+    }, {
+      stream: 'CC2',
+      startTime: 1,
+      endTime: 3,
+      text: 'This is an in-band caption in CC2'
+    }]
+  }));
+
+  sourceBuffer.transmuxer_.onmessage(doneMessage);
+  let cues = sourceBuffer.inbandTextTracks_.CC1.cues;
+
+  QUnit.equal(addTrackCalled, 0, 'no tracks were created');
+  QUnit.equal(tracks.CC1.cues.length, 1, 'CC1 contains 1 cue');
+  QUnit.equal(tracks.CC2.cues.length, 1, 'CC2 contains 1 cue');
+
+  QUnit.equal(tracks.CC1.cues[0].text, 'This is an in-band caption in CC1', 'CC1 contains the right cue');
+  QUnit.equal(tracks.CC2.cues[0].text, 'This is an in-band caption in CC2', 'CC2 contains the right cue');
 });
 
 QUnit.test('translates metadata events into WebVTT cues', function() {
@@ -1191,6 +1261,11 @@ QUnit.test('removes existing metadata and caption tracks that exist on the playe
       addedTracks.push(trackEl.track);
       return trackEl;
     },
+    textTracks() {
+      return {
+        getTrackById() {}
+      };
+    },
     remoteTextTracks() {
       return addedTracks;
     },
@@ -1257,6 +1332,11 @@ QUnit.test('cleans up WebVTT cues on sourceclose', function() {
 
       addedTracks.push(trackEl.track);
       return trackEl;
+    },
+    textTracks() {
+      return {
+        getTrackById() {}
+      };
     },
     remoteTextTracks() {
       return addedTracks;

@@ -20,16 +20,29 @@ const createTextTracksIfNecessary = function(sourceBuffer, mediaSource, segment)
     if (!sourceBuffer.inbandTextTracks_) {
       sourceBuffer.inbandTextTracks_ = {};
     }
+
     segment.captions.forEach(function(caption) {
       // Support older mux.js which only supports CC1
-      let track = caption.stream || 'CC1';
+      let trackId = caption.stream || 'CC1';
+      let track = player.textTracks().getTrackById(trackId);
 
-      if (!sourceBuffer.inbandTextTracks_[track]) {
-        removeExistingTrack(player, 'captions', track);
-        sourceBuffer.inbandTextTracks_[track] = player.addRemoteTextTrack({
-          kind: 'captions',
-          label: track
-        }, false).track;
+      if (!sourceBuffer.inbandTextTracks_[trackId]) {
+        if (track) {
+          // Resuse an existing track with a CC# id because this was
+          // very likely created by videojs-contrib-hls from information
+          // in the m3u8 for us to use
+          sourceBuffer.inbandTextTracks_[trackId] = track;
+        } else {
+          // Otherwise, create a track with the default `CC#` label and
+          // without a language
+          removeExistingTrack(player, 'captions', trackId);
+
+          sourceBuffer.inbandTextTracks_[trackId] = player.addRemoteTextTrack({
+            kind: 'captions',
+            id: trackId,
+            label: trackId
+          }, false).track;
+        }
       }
     });
   }
