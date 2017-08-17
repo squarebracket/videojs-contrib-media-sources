@@ -182,9 +182,16 @@ export default class FlashSourceBuffer extends videojs.EventTarget {
       removeCuesFromTrack(0, Infinity, this.inbandTextTrack_);
     });
 
+    this.mediaSource_.player_.tech_.on('hls-reset-everything', this.resetEverything);
+
     this.mediaSource_.player_.tech_.hls.on('dispose', () => {
       this.transmuxer_.terminate();
+      this.mediaSource_.player_.tech_.off('hls-reset-everything', this.resetEverything);
     });
+  }
+
+  resetEverything() {
+    this.transmuxer_.postMessage({action: 'resetCaptions'});
   }
 
   /**
